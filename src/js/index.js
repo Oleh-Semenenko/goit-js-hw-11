@@ -1,5 +1,4 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import axios from 'axios';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
@@ -7,15 +6,12 @@ import { refs } from './refs';
 import createCardMarkup from './card-markup';
 import clearMarkup from './clear-gallery';
 import scroll from './scroll';
+import fetchImg from './fetch';
 
 let gallery = new SimpleLightbox('.gallery a');
 
-
-axios.defaults.baseURL = 'https://pixabay.com';
-const API_KEY = '30517244-e729ceb83709aa7ca3195b0ba';
-
 export let page = 1;
-export let searchQuery = '';
+let searchQuery = '';
 let totalImg = 0;
 
 refs.form.addEventListener('submit', onFormSubmit);
@@ -27,17 +23,21 @@ function onFormSubmit(event) {
   refs.loadMore.classList.add('is-hidden');
   clearMarkup();
   searchQuery = event.target.elements.searchQuery.value;
+  if (!searchQuery) {
+    clearMarkup();
+    return;
+  }
   resetPage();
-  fetchImg(searchQuery);
+  renderGallery(searchQuery);
 }
 
 function onLoadMoreClick() {
   page += 1;
-  fetchImg(searchQuery);
+  renderGallery(searchQuery);
 }
 
-async function fetchImg(query) {
-  const response = await axios.get(`/api/?key=${API_KEY}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${page}`)
+async function renderGallery(query) {
+  const response = await fetchImg(query);
   totalImg = response.data.totalHits;
   const data = await response.data.hits;
   if (page === 1 && data.length !== 0) {
@@ -66,3 +66,4 @@ async function fetchImg(query) {
 function resetPage() {
   page = 1;
 }
+
